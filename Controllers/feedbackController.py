@@ -7,6 +7,12 @@ from Utils.common import CommonFunctions
 class FeedbackController:
     def get_feedback_data_excel(self,file):
         try:
+            if file is None or file.file is None:
+                return JSONResponse(
+                    status_code=400,
+                    content={"message": "File is required."}
+                )
+
             df = pd.read_excel(file.file)
             df = df.replace([np.nan, np.inf, -np.inf], None)
             for col in df.columns:
@@ -81,7 +87,7 @@ class FeedbackController:
                     "engagement_with_management_competency": engagement_with_management_competency,
                     "nominee_leadership":abc_questions,
                     "workplace_culture":workplace_culture_words,
-                    "predominant_leader_most_thing":stand_out_leader_thing_words,
+                    "predominant_leader_most_thing":stand_out_leader_thing_words[:12],
                     "continue_doing_thing":continue_doing_thing_words,
                     "stop_doing_thing":stop_doing_thing_words,
                     "predominant_leader_thing":predominant_leader_thing,

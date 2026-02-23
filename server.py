@@ -1,6 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from Routes.feedbackRoutes import feedback_bp
+import uvicorn
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = FastAPI()
 app.add_middleware(
@@ -24,3 +29,8 @@ def health_check():
         status_code = 500
 
     return {"status": "healthy", "backend": db_status}, status_code
+
+if __name__ == "__main__":
+    port = int(os.getenv("PORT", 8000))  
+    print(f"Running on port: {port}")
+    uvicorn.run("server:app", host="0.0.0.0", port=port, reload=True)

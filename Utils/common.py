@@ -237,7 +237,7 @@ class CommonFunctions:
         per_option = {}
         for letter, text in option_map.items():
             per_option[letter] = {
-                "text": text,
+                "text": text.capitalize(),
                 "count": option_counts.get(letter, 0)
             }
 
