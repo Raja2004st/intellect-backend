@@ -181,7 +181,6 @@ class CommonFunctions:
         if not data:
             return {}
 
-        # Take the first (and only) question-records pair
         question, records = next(iter(data.items()))
 
         question_clean = question.replace("_x000D_", "").strip()
@@ -284,8 +283,60 @@ class CommonFunctions:
                 continue
 
             comment = item.get("Comment")
-
-            if comment and comment.strip():
+            # ignore_values = {"nil", "-", "no comment", "no comments", "na", "none"}
+            if comment and comment.strip() :
                 comments.append(comment.strip())
 
         return comments
+
+
+    @staticmethod
+    def classify_comment_text(comment: str) -> str:
+        """Classify a single comment as Start / Stop / Continue / Uncategorized."""
+        if not comment:
+            return " uncategorized"
+
+        text = comment.lower()
+
+        continue_keywords = ["happy", "great", "open", "positive", "appreciate"]
+        start_keywords = ["more", "foster", "increase", "improve", "start", "encourage"]
+        stop_keywords = ["not", "stop", "avoid", "reduce", "don't"]
+
+        if any(word in text for word in stop_keywords):
+            return "stop"
+        elif any(word in text for word in start_keywords):
+            return "start"
+        elif any(word in text for word in continue_keywords):
+            return "continue"
+        else:
+            return "uncategorized"
+
+
+    @staticmethod
+    def categorize_comments(records):
+        """Group comments from records into Start/Stop/Continue/Uncategorized, ignoring nil/no-comment style values."""
+        categories = {
+            "start": [],
+            "stop": [],
+            "continue": [],
+            "uncategorized": [],
+        }
+
+        ignore_values = {"nil", "-", "no comment", "no comments", "na", "n/a"}
+
+        for item in records:
+            comment = item.get("Comment")
+            if not comment:
+                continue
+
+            cleaned = comment.strip()
+            if not cleaned:
+                continue
+
+            if cleaned.lower() in ignore_values:
+                continue
+
+            bucket = CommonFunctions.classify_comment_text(cleaned)
+            categories[bucket].append(cleaned)
+
+        return categories

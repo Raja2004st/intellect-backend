@@ -66,7 +66,7 @@ class FeedbackController:
             continue_doing_thing_words=CommonFunctions.get_non_self_comments(continue_doing_thing)
             stop_doing_thing_words=CommonFunctions.get_non_self_comments(stop_altogether)
             predominant_leader_thing=CommonFunctions.get_non_self_comments(stand_out_leader_thing)
-            action_areas_thing=CommonFunctions.get_non_self_comments(action_areas_thing_data)
+            action_areas_thing=CommonFunctions.categorize_comments(action_areas_thing_data)
           
             return JSONResponse(
                 status_code=200,
@@ -92,7 +92,6 @@ class FeedbackController:
                     "stop_doing_thing":stop_doing_thing_words,
                     "predominant_leader_thing":predominant_leader_thing,
                     "action_areas_thing":action_areas_thing
-
                 }
             )
                 
