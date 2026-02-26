@@ -1,4 +1,5 @@
-"fastapi[standard]"
+fastapi[standard]
 pandas
 openpyxl
 scikit-learn
+google-genai

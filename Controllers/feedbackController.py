@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 import pandas as pd
 import numpy as np
 from Utils.common import CommonFunctions
+from Controllers.llmGenerationController import LLMGenerationController
 
 class FeedbackController:
     def get_feedback_data_excel(self,file):
@@ -66,7 +67,33 @@ class FeedbackController:
             continue_doing_thing_words=CommonFunctions.get_non_self_comments(continue_doing_thing)
             stop_doing_thing_words=CommonFunctions.get_non_self_comments(stop_altogether)
             predominant_leader_thing=CommonFunctions.get_non_self_comments(stand_out_leader_thing)
-            action_areas_thing=CommonFunctions.categorize_comments(action_areas_thing_data)
+            action_areas_thing_data_comment=CommonFunctions.get_non_self_comments(action_areas_thing_data)
+            
+            action_areas_thing_data_extended = []
+            action_areas_thing_data_extended.append(stand_out_leader_thing_words)
+            action_areas_thing_data_extended.append(continue_doing_thing_words)
+            action_areas_thing_data_extended.append(stop_doing_thing_words)
+            action_areas_thing_data_extended.extend(action_areas_thing_data_comment)
+            controller = LLMGenerationController()
+            # action_areas_thing_llm_generate = controller.generate_action_areas(action_areas_thing_data_extended)
+            action_areas_thing_llm_generate={ 
+                "continue": [
+            "Maintains clear, fair, and consistent policies, fostering discipline and security.",
+            "Provides empathetic, supportive leadership, encouraging high performance and professional growth.",
+            "Leads by example with commitment, strong vision, and effective, transparent communication."
+        ],
+        "start": [
+            "Implement more frequent, personalized feedback and recognition for staff achievements.",
+            "Foster greater collaboration and open communication, involving staff in decision-making processes.",
+            "Introduce new training, workshops, and mentorship programs to enhance teaching skills and resources."
+        ],
+        "stop": [
+            "Reduce micromanagement and excessive administrative tasks, delegating responsibilities effectively.",
+            "Cease partiality or favouritism, ensuring fair and objective decision-making based on verified information.",
+            "Avoid public criticism or negative comparisons, providing constructive feedback privately."
+        ]
+    }
+                      
           
             return JSONResponse(
                 status_code=200,
@@ -91,7 +118,8 @@ class FeedbackController:
                     "continue_doing_thing":continue_doing_thing_words,
                     "stop_doing_thing":stop_doing_thing_words,
                     "predominant_leader_thing":predominant_leader_thing,
-                    "action_areas_thing":action_areas_thing
+                    # "action_areas_thing":action_areas_thing_llm_generate['structured']
+                     "action_areas_thing":action_areas_thing_llm_generate
                 }
             )
                 
