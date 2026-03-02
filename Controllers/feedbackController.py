@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 from Utils.common import CommonFunctions
 from Controllers.llmGenerationController import LLMGenerationController
+import asyncio
 
 class FeedbackController:
     def get_feedback_data_excel(self,file):
@@ -75,7 +76,17 @@ class FeedbackController:
             action_areas_thing_data_extended.append(stop_doing_thing_words)
             action_areas_thing_data_extended.extend(action_areas_thing_data_comment)
             controller = LLMGenerationController()
+            analysis_data={
+                    "continue_doing": continue_doing_thing_words,
+                    "stop_doing": stop_doing_thing_words,
+                    "predominant_leader_thing": predominant_leader_thing
+                }
+            
             # action_areas_thing_llm_generate = controller.generate_action_areas(action_areas_thing_data_extended)
+            # analysis_continue_doing_data=controller.analysis_comment_to_generate(continue_doing_thing_words)
+            # anlysis_stop_doing_thing_words = controller.analysis_comment_to_generate(stop_doing_thing_words)
+            # analysis_predominant_leader_thing = controller.analysis_comment_to_generate(predominant_leader_thing)
+            analysis_general = controller.analysis_comment_to_generate(analysis_data)
             action_areas_thing_llm_generate={ 
                 "continue": [
             "Maintains clear, fair, and consistent policies, fostering discipline and security.",
@@ -115,11 +126,12 @@ class FeedbackController:
                     "nominee_leadership":abc_questions,
                     "workplace_culture":workplace_culture_words,
                     "predominant_leader_most_thing":stand_out_leader_thing_words[:12],
-                    "continue_doing_thing":continue_doing_thing_words,
-                    "stop_doing_thing":stop_doing_thing_words,
-                    "predominant_leader_thing":predominant_leader_thing,
+                    "continue_doing_thing":analysis_general['structured']['continue_doing'] if analysis_general['structured'] else [],
+                    "stop_doing_thing":analysis_general['structured']['stop_doing'] if analysis_general['structured'] else [],
+                    "predominant_leader_thing":analysis_general['structured']['predominant_leader_thing'] if analysis_general['structured'] else [],
                     # "action_areas_thing":action_areas_thing_llm_generate['structured']
-                     "action_areas_thing":action_areas_thing_llm_generate
+                     "action_areas_thing":action_areas_thing_llm_generate,
+                     
                 }
             )
                 
