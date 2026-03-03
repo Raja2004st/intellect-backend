@@ -32,16 +32,17 @@ class CommonFunctions:
 
         for question, rows in question_grouped.items():
             grouped = defaultdict(list)
-
+            rater_groups_set = set()
             for item in rows:
                 group = item.get("Rater Group")
                 value = item.get("Rating")
-
+                rater_groups_set.add(group)
                 if group is None or value is None:
                     continue
-
+                
                 grouped[group].append(value)
 
+            print("rater_groups_set", rater_groups_set)
             avg_result = {}
 
             sub_vals = grouped.get("Subordinates", [])
@@ -52,6 +53,8 @@ class CommonFunctions:
                 avg_result["Subordinates"] = round(
                     sum(combined_people) / len(combined_people), 2
                 )
+            elif "Subordinates" in rater_groups_set or "Others" in rater_groups_set:
+                avg_result["Subordinates"] = None
 
             l1_vals = grouped.get("L1 Manager", [])
             l2_vals = grouped.get("L2 Manager", [])
@@ -61,12 +64,18 @@ class CommonFunctions:
                 avg_result["Manager"] = round(
                     sum(combined_mgr) / len(combined_mgr), 2
                 )
+            elif "L1 Manager" in rater_groups_set or "L2 Manager" in rater_groups_set:
+                avg_result["Manager"] = None
 
             for group, values in grouped.items():
                 if group in ["Subordinates", "Others", "L1 Manager", "L2 Manager"]:
                     continue
-
+                
                 avg_result[group] = round(sum(values) / len(values), 2)
+
+            # for group in rater_groups_set:
+            #     if group not in avg_result:
+            #         avg_result[group] = None
 
             final_output[question] = avg_result
 

@@ -132,194 +132,238 @@ class LLMGenerationController:
                 content={"message": f"Error : {str(e)}"}
             )
     
-    def analysis_comment_to_generate(self, data):
+    def analysis_comment_to_generate(self, data,system_prompt=None,feedback_schema=None):
         try:
-            system_prompt = """
-You are a STRICT Educational Feedback Formatting Assistant.
+#             system_prompt = """
+# You are a STRICT Educational Feedback Formatting Assistant.
 
-Your job is ONLY to FORMAT comments.
-You are NOT allowed to rewrite, rephrase, summarize, expand,
-interpret, or generate new wording.
+# Your job is ONLY to FORMAT comments.
+# You are NOT allowed to rewrite, rephrase, summarize, expand,
+# interpret, or generate new wording.
 
-================================================
-CORE RULE (MOST IMPORTANT)
-================================================
+# ================================================
+# CORE RULE (MOST IMPORTANT)
+# ================================================
 
-INPUT COMMENT = OUTPUT COMMENT
+# INPUT COMMENT = OUTPUT COMMENT
 
-You MUST preserve the user's original sentence.
+# You MUST preserve the user's original sentence.
 
-Allowed changes ONLY:
-✔ fix small grammar errors
-✔ fix spacing/punctuation
-✔ apply Markdown bold
-✔ apply RED highlighting for negatives
+# Allowed changes ONLY:
+# ✔ fix small grammar errors
+# ✔ fix spacing/punctuation
+# ✔ apply Markdown bold
+# ✔ apply RED highlighting for negatives
 
-NOT ALLOWED:
-✘ rewriting sentences
-✘ changing sentence structure
-✘ adding words like "Continue to"
-✘ improving wording stylistically
-✘ merging comments
-✘ splitting comments
-✘ generating new ideas
+# NOT ALLOWED:
+# ✘ rewriting sentences
+# ✘ changing sentence structure
+# ✘ adding words like "Continue to"
+# ✘ improving wording stylistically
+# ✘ merging comments
+# ✘ splitting comments
+# ✘ generating new ideas
 
-If wording changes meaning → INVALID OUTPUT.
+# If wording changes meaning → INVALID OUTPUT.
 
-Each input comment MUST produce EXACTLY ONE output comment.
+# Each input comment MUST produce EXACTLY ONE output comment.
 
-================================================
-INPUT STRUCTURE
-================================================
+# ================================================
+# INPUT STRUCTURE
+# ================================================
 
-You will receive JSON:
+# You will receive JSON:
 
-{
-  "continue_doing": [...],
-  "stop_doing": [...],
-  "predominant_leader_thing": [...]
-}
+# {
+#   "continue_doing": [...],
+#   "stop_doing": [...],
+#   "predominant_leader_thing": [...]
+# }
 
-Process EACH array independently.
+# Process EACH array independently.
 
-DO NOT move comments between categories.
+# DO NOT move comments between categories.
 
-================================================
-INPUT FILTER RULES
-================================================
+# ================================================
+# INPUT FILTER RULES
+# ================================================
 
-Ignore ONLY these values:
+# Ignore ONLY these values:
 
-- "-"
-- "---"
-- "Nil"
-- "NIL"
-- "no comment"
-- "no comments"
-- "nothing"
-- empty text
+# - "-"
+# - "---"
+# - "Nil"
+# - "NIL"
+# - "no comment"
+# - "no comments"
+# - "nothing"
+# - empty text
 
-Everything else MUST be preserved.
+# Everything else MUST be preserved.
 
-================================================
-FORMATTING RULES
-================================================
+# ================================================
+# FORMATTING RULES
+# ================================================
 
-1 BOLD POSITIVE PHRASES
+# 1 BOLD POSITIVE PHRASES
 
-Bold ONLY meaningful positive traits already written.
+# Bold ONLY meaningful positive traits already written.
 
-Example:
-"good leadership and support"
-→ "good **leadership** and **support**"
+# Example:
+# "good leadership and support"
+# → "good **leadership** and **support**"
 
-DO NOT add new positive words.
+# DO NOT add new positive words.
 
-------------------------------------------------
+# ------------------------------------------------
 
-2 RED COLOR (STRICT NEGATIVE DETECTION)
+# 2 RED COLOR (STRICT NEGATIVE DETECTION)
 
-RED only when the sentence describes an EXISTING problem.
+# RED only when the sentence describes an EXISTING problem.
 
-Apply ONLY to the negative phrase already present.
+# Apply ONLY to the negative phrase already present.
 
-Format:
+# Format:
 
-<span style="color:red"><b>negative phrase</b></span>
+# <span style="color:red"><b>negative phrase</b></span>
 
-DO NOT rewrite the sentence.
+# DO NOT rewrite the sentence.
 
-------------------------------------------------
+# ------------------------------------------------
 
-NEVER MARK RED FOR:
+# NEVER MARK RED FOR:
 
-- suggestions
-- recommendations
-- expectations
-- future improvements
-- advisory tone
+# - suggestions
+# - recommendations
+# - expectations
+# - future improvements
+# - advisory tone
 
-Words like:
-Ensure, Consider, Improve, Provide, Encourage
+# Words like:
+# Ensure, Consider, Improve, Provide, Encourage
 
-are NOT negative unless failure is explicitly stated.
+# are NOT negative unless failure is explicitly stated.
 
-If unsure → DO NOT use RED.
+# If unsure → DO NOT use RED.
 
-================================================
-STYLE LIMITS (VERY STRICT)
-================================================
+# ================================================
+# STYLE LIMITS (VERY STRICT)
+# ================================================
 
-DO NOT:
-- add prefixes ("Continue to", "Stop", etc.)
-- change tone
-- lengthen sentences
-- shorten sentences
-- combine ideas
+# DO NOT:
+# - add prefixes ("Continue to", "Stop", etc.)
+# - change tone
+# - lengthen sentences
+# - shorten sentences
+# - combine ideas
 
-Only formatting is allowed.
+# Only formatting is allowed.
 
-================================================
-OUTPUT FORMAT (STRICT)
-================================================
+# ================================================
+# OUTPUT FORMAT (STRICT)
+# ================================================
 
-Return ONLY this JSON structure:
+# Return ONLY this JSON structure:
 
-{
-  "continue_doing": [string],
-  "stop_doing": [string],
-  "predominant_leader_thing": [string]
-}
+# {
+#   "continue_doing": [string],
+#   "stop_doing": [string],
+#   "predominant_leader_thing": [string]
+# }
 
-Requirements:
+# Requirements:
 
-- same number of comments as input
-- same order preserved
-- no extra keys
-- no explanations
-- valid JSON only
-- must work with JSON.parse()
+# - same number of comments as input
+# - same order preserved
+# - no extra keys
+# - no explanations
+# - valid JSON only
+# - must work with JSON.parse()
 
-FINAL CHECK BEFORE OUTPUT:
+# FINAL CHECK BEFORE OUTPUT:
 
-For every output sentence ask internally:
-"Is this still the user's sentence?"
+# For every output sentence ask internally:
+# "Is this still the user's sentence?"
 
-If NO → regenerate.
-"""         
+# If NO → regenerate.
+# """         
+#             system_prompt = """
+# You are a STRICT Educational Feedback Formatter.
+
+# CORE RULE:
+# INPUT COMMENT = OUTPUT COMMENT.
+# Do NOT rewrite, rephrase, expand, shorten, merge, or add words.
+
+# ALLOWED:
+# - Fix small grammar or spacing issues
+# - Apply Markdown bold to positive traits already written
+# - Highlight ONLY explicit existing problems using:
+#   <span style="color:red"><strong>negative phrase</strong></span>
+
+# NOT ALLOWED:
+# - Changing sentence structure
+# - Adding prefixes like "Continue to"
+# - Improving wording stylistically
+# - Generating new ideas
+
+# INPUT:
+# {
+#   "continue_doing": [...],
+#   "stop_doing": [...],
+#   "predominant_leader_thing": [...]
+# }
+
+# Rules:
+# - Process each array separately.
+# - Preserve order.
+# - Ignore only: "-", "---", "Nil", "NIL", "no comment", "no comments", "nothing", empty text.
+# - One input comment → exactly one output comment.
+# - Do NOT move comments between categories.
+# - If unsure whether something is negative → DO NOT mark red.
+
+# OUTPUT:
+# Return ONLY valid JSON:
+# {
+#   "continue_doing": [string],
+#   "stop_doing": [string],
+#   "predominant_leader_thing": [string]
+# }
+# No explanations.
+# """
             
-            
-            feedback_schema = {
-    "type": "object",
-    "properties": {
-        "continue_doing": {
-            "type": "array",
-            "items": {
-                "type": "string"
-            },
-            "description": "Formatted comments describing practices to continue."
-        },
-        "stop_doing": {
-            "type": "array",
-            "items": {
-                "type": "string"
-            },
-            "description": "Formatted comments describing practices to stop."
-        },
-        "predominant_leader_thing": {
-            "type": "array",
-            "items": {
-                "type": "string"
-            },
-            "description": "Formatted comments describing predominant leadership traits."
-        }
-    },
-    "required": [
-        "continue_doing",
-        "stop_doing",
-        "predominant_leader_thing"
-    ]
-}
+
+         
+#             feedback_schema = {
+#     "type": "object",
+#     "properties": {
+#         "continue_doing": {
+#             "type": "array",
+#             "items": {
+#                 "type": "string"
+#             },
+#             "description": "Formatted comments describing practices to continue."
+#         },
+#         "stop_doing": {
+#             "type": "array",
+#             "items": {
+#                 "type": "string"
+#             },
+#             "description": "Formatted comments describing practices to stop."
+#         },
+#         "predominant_leader_thing": {
+#             "type": "array",
+#             "items": {
+#                 "type": "string"
+#             },
+#             "description": "Formatted comments describing predominant leadership traits."
+#         }
+#     },
+#     "required": [
+#         "continue_doing",
+#         "stop_doing",
+#         "predominant_leader_thing"
+#     ]
+# }
 
             client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
             response = client.models.generate_content(
@@ -328,14 +372,16 @@ If NO → regenerate.
                     system_instruction=system_prompt,
                     response_mime_type="application/json",
                     response_schema= feedback_schema,
-                    # max_output_tokens=1024,  
-                    # temperature=0.2        
-                
+                    max_output_tokens=6024,  
+                    # temperature=0.2
                     ),
                     
-                contents=json.dumps(data)
+                contents=data
             )
-
+            usage = response.usage_metadata
+            print("Prompt Tokens:", usage.prompt_token_count)
+            print("Completion Tokens:", usage.candidates_token_count)
+            print("Total Tokens:", usage.total_token_count)
             response_text=response.text
          
             try:
